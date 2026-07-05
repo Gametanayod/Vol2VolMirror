@@ -1,4 +1,4 @@
-name: Mirror Vol2Vol Data
+name: Mirror Vol2Vol Data + Telegram Alert
 
 on:
   schedule:
@@ -20,6 +20,11 @@ jobs:
       - name: Checkout mirror repo
         uses: actions/checkout@v4
 
+      - name: Keep copy of current data (for alert diff)
+        run: |
+          mkdir -p _old
+          cp *.txt _old/ 2>/dev/null || true
+
       - name: Fetch data files from source repo
         id: fetch
         run: |
@@ -38,7 +43,8 @@ jobs:
           done
           echo "fetched=$ok" >> "$GITHUB_OUTPUT"
 
-      - name: Commit if data changed
+      - name: Apply changes
+        id: apply
         if: steps.fetch.outputs.fetched != '0'
         run: |
           changed=0
@@ -50,12 +56,24 @@ jobs:
             fi
           done
           rm -rf _incoming
-          if [ "$changed" = "1" ]; then
-            git config user.name "vol2vol-mirror-bot"
-            git config user.email "actions@github.com"
-            git add ./*.txt
-            git commit -m "Data Sync: $(TZ=Asia/Bangkok date '+%-m/%-d/%Y, %H:%M:%S')"
-            git push
-          else
-            echo "No changes — skip commit"
-          fi
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Check abnormal volume & send Telegram alert
+        if: steps.apply.outputs.changed == '1'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ALERT_SENSITIVITY: "4"    # ความไว: ต่ำ = เตือนบ่อย, สูง = เตือนเฉพาะผิดปกติมาก
+          ALERT_MIN_DELTA: "20"     # ขั้นต่ำสัญญาที่เพิ่มต่อ 5 นาที
+        run: node alert-check.js _old .
+
+      - name: Commit new data
+        if: steps.apply.outputs.changed == '1'
+        run: |
+          rm -rf _old
+          git config user.name "vol2vol-mirror-bot"
+          git config user.email "actions@github.com"
+          git add ./*.txt
+          git commit -m "Data Sync: $(TZ=Asia/Bangkok date '+%-m/%-d/%Y, %H:%M:%S')"
+          git push
+
