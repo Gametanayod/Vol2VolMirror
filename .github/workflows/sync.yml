@@ -67,13 +67,35 @@ jobs:
           ALERT_MIN_DELTA: "20"     # ขั้นต่ำสัญญาที่เพิ่มต่อ 5 นาที
         run: node alert-check.js _old .
 
+      - name: Get source commit time (so mirror timestamps match the data source)
+        id: srctime
+        if: steps.apply.outputs.changed == '1'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SRC_DATE=$(curl -s -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/pageth/Vol2VolData/commits?path=IntradayData.txt&per_page=1" \
+            | grep -m1 '"date"' | sed 's/.*"date": *"\([^"]*\)".*/\1/')
+          echo "date=$SRC_DATE" >> "$GITHUB_OUTPUT"
+          echo "Source commit time: $SRC_DATE"
+
       - name: Commit new data
         if: steps.apply.outputs.changed == '1'
+        env:
+          SRC_DATE: ${{ steps.srctime.outputs.date }}
         run: |
           rm -rf _old
           git config user.name "vol2vol-mirror-bot"
           git config user.email "actions@github.com"
           git add ./*.txt
-          git commit -m "Data Sync: $(TZ=Asia/Bangkok date '+%-m/%-d/%Y, %H:%M:%S')"
+          # ใช้เวลา commit ของต้นทางเป็นเวลา commit ของ mirror — ป้ายเวลาบน dashboard จะตรงกับ data source
+          if [ -n "$SRC_DATE" ]; then
+            export GIT_AUTHOR_DATE="$SRC_DATE"
+            export GIT_COMMITTER_DATE="$SRC_DATE"
+            MSG_TIME=$(TZ=Asia/Bangkok date -d "$SRC_DATE" '+%-m/%-d/%Y, %H:%M:%S' 2>/dev/null || TZ=Asia/Bangkok date '+%-m/%-d/%Y, %H:%M:%S')
+          else
+            MSG_TIME=$(TZ=Asia/Bangkok date '+%-m/%-d/%Y, %H:%M:%S')
+          fi
+          git commit -m "Data Sync: $MSG_TIME"
           git push
 
