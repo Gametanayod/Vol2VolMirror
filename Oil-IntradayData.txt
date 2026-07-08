@@ -1,5 +1,5 @@
-WTI Crude Oil (LO|CL) XL2N6 (0.89 DTE) vs 74.72 (+4.28) - Intraday Volume
-Put: 3,204  Call: 5,220  Vol: 65.65  Vol Chg: 12.16  Future Chg: 4.28
+WTI Crude Oil (LO|CL) XL2N6 (0.89 DTE) vs 74.76 (+4.32) - Intraday Volume
+Put: 3,204  Call: 5,221  Vol: 65.65  Vol Chg: 12.16  Future Chg: 4.32
 Strike,Call,Put,Vol Settle
 68,0,8,0.4292656506233925
 68.25,0,5,0.42545012682234074
