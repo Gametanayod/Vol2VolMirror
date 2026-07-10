@@ -1,5 +1,5 @@
 S&P 500 (ES|ES) EW2N6 (0.25 DTE) vs 7601.75 (+13) - Intraday Volume
-Put: 45,097  Call: 31,030  Vol: 14.73  Vol Chg: 3.31  Future Chg: 13
+Put: 45,097  Call: 31,032  Vol: 15.07  Vol Chg: 3.47  Future Chg: 13
 Strike,Call,Put,Vol Settle
 7515,5,140,0.16184493358014151
 7520,13,603,0.15921534344670363
