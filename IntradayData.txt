@@ -1,5 +1,5 @@
-Gold (OG|GC) G2TN6 (0.76 DTE) vs 4008.4 (-105.3) - Intraday Volume
-Put: 13  Call: 287  Vol: 43.49  Vol Chg: 19.14  Future Chg: -105.3
+Gold (OG|GC) G2TN6 (0.76 DTE) vs 4007.5 (-106.2) - Intraday Volume
+Put: 14  Call: 287  Vol: 43.49  Vol Chg: 19.14  Future Chg: -106.2
 Strike,Call,Put,Vol Settle
 3780,0,0,0
 3785,0,0,0
@@ -10,7 +10,7 @@ Strike,Call,Put,Vol Settle
 3810,0,5,0
 3815,0,0,0
 3820,0,0,0
-3825,0,1,0
+3825,0,2,0
 3830,0,0,0
 3835,0,0,0
 3840,0,0,0
