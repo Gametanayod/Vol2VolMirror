@@ -1,5 +1,5 @@
-S&P 500 (ES|ES) E2BN6 (0.61 DTE) vs 7562.75 (-0.25) - Open Interest
-Put: 146,445  Call: 38,937  Vol: 17.48  Vol Chg: -0.12  Future Chg: -0.25
+S&P 500 (ES|ES) E2BN6 (0.61 DTE) vs 7562.5 (-0.5) - Open Interest
+Put: 146,445  Call: 38,937  Vol: 17.48  Vol Chg: -0.12  Future Chg: -0.5
 Strike,Call,Put,Vol Settle
 7405,0,25,0.2227363890124252
 7410,2,115,0.221736258463352
