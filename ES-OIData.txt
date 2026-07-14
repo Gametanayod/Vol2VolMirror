@@ -1,5 +1,5 @@
-S&P 500 (ES|ES) E3CN6 (1.06 DTE) vs 7593.5 (+30.5) - Open Interest
-Put: 136,685  Call: 32,231  Vol: 12.15  Vol Chg: -1.93  Future Chg: 30.5
+S&P 500 (ES|ES) E3CN6 (1.05 DTE) vs 7594.25 (+31.25) - Open Interest
+Put: 136,685  Call: 32,231  Vol: 12.10  Vol Chg: -1.98  Future Chg: 31.25
 Strike,Call,Put,Vol Settle
 7450,39,357,0.18684304120688466
 7455,0,98,0.1853793974587461
