@@ -14,9 +14,9 @@
 const fs = require('fs');
 
 const ASSETS = [
-  { key: 'gold', label: 'Gold (GC)', file: 'IntradayData.txt' },
-  { key: 'oil', label: 'Oil (CL)', file: 'Oil-IntradayData.txt' },
-  { key: 'es', label: 'ES (S&P 500)', file: 'ES-IntradayData.txt' },
+  { key: 'gold', label: 'Gold (GC)', file: 'IntradayData.txt', near: 5 },
+  { key: 'oil', label: 'Oil (CL)', file: 'Oil-IntradayData.txt', near: 0.5 },
+  { key: 'es', label: 'ES (S&P 500)', file: 'ES-IntradayData.txt', near: 10 },
 ];
 
 const OLD_DIR = process.argv[2] || '_old';
@@ -31,11 +31,19 @@ function loadState() {
   try {
     const s = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
     // ขึ้นวันใหม่ (เวลาไทย) → รีเซ็ตค่าสูงสุด
-    if (s.day !== thDayKey(new Date())) return { day: thDayKey(new Date()), max: {} };
+    if (s.day !== thDayKey(new Date())) return { day: thDayKey(new Date()), max: {}, near: {} };
+    if (!s.near) s.near = {};
     return s;
   } catch (e) {
-    return { day: thDayKey(new Date()), max: {} };
+    return { day: thDayKey(new Date()), max: {}, near: {} };
   }
+}
+
+// ราคาจริงของ underlying อยู่ในบรรทัดหัว: "... vs 4137.2 (-20.2) - ..."
+function parseUnderlying(text) {
+  const head = text.split('\n')[0] || '';
+  const m = head.match(/vs\s+([-\d.]+)/);
+  return m ? parseFloat(m[1]) : null;
 }
 
 function parseRows(text) {
@@ -50,13 +58,17 @@ function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
 
 const state = loadState();
 const alerts = [];
+const proximityAlerts = []; // เตือนเมื่อราคาจริงเข้าใกล้ strike ที่มีขนาดสัญญาสะสมมากสุด
 const summaries = []; // top Call/Put สะสมของทุกสินทรัพย์ — แนบท้ายข้อความเสมอเมื่อมี alert
 for (const asset of ASSETS) {
   const oldPath = OLD_DIR + '/' + asset.file;
   const newPath = NEW_DIR + '/' + asset.file;
   if (!fs.existsSync(oldPath) || !fs.existsSync(newPath)) continue;
-  const oldRows = parseRows(fs.readFileSync(oldPath, 'utf8'));
-  const newRows = parseRows(fs.readFileSync(newPath, 'utf8'));
+  const oldText = fs.readFileSync(oldPath, 'utf8');
+  const newText = fs.readFileSync(newPath, 'utf8');
+  const oldRows = parseRows(oldText);
+  const newRows = parseRows(newText);
+  const price = parseUnderlying(newText);
   const oldMap = {};
   oldRows.forEach((r) => { oldMap[r.strike] = r; });
 
@@ -83,6 +95,26 @@ for (const asset of ASSETS) {
   });
   summaries.push({ asset: asset.label, topCall, topPut });
 
+  // ---- เงื่อนไข: ราคาจริงเข้าใกล้ strike ที่มีขนาดสัญญาสะสมมากสุด ----
+  // เตือนครั้งเดียวต่อ strike (เก็บใน state.near) จนกว่าราคาจะออกจากโซนแล้วค่อยกลับเข้าใหม่
+  if (price != null) {
+    [{ side: 'Call', top: topCall, vol: topCall && topCall.call }, { side: 'Put', top: topPut, vol: topPut && topPut.put }].forEach((x) => {
+      if (!x.top) return;
+      const dist = Math.abs(price - x.top.strike);
+      const stKey = asset.key + '_' + x.side;
+      const wasNear = state.near[stKey];
+      const key = x.top.strike;
+      if (dist <= asset.near) {
+        if (wasNear !== key) {
+          proximityAlerts.push({ asset: asset.label, side: x.side, strike: x.top.strike, price, vol: x.vol, dist });
+          state.near[stKey] = key; // เตือนแล้ว ไม่เตือนซ้ำสำหรับ strike เดิม
+        }
+      } else if (wasNear === key) {
+        state.near[stKey] = null; // ออกจากโซนของ strike นี้แล้ว — พร้อมเตือนใหม่ถ้ากลับเข้ามา
+      }
+    });
+  }
+
   // เส้นฐานเริ่มต้น = ค่ากลาง (median) ของการเปลี่ยนแปลงในรอบนี้
   const totals = deltas.map((d) => d.total).filter((v) => v > 0).sort((a, b) => a - b);
   if (totals.length === 0) continue;
@@ -105,22 +137,35 @@ for (const asset of ASSETS) {
 // บันทึกค่าสูงสุดล่าสุดไว้เสมอ (แม้ไม่มี alert) — sync.yml จะ commit ไฟล์นี้ไปด้วย
 fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
 
-if (alerts.length === 0) {
-  console.log('No new-high alerts. Current max: ' + JSON.stringify(state.max));
+if (alerts.length === 0 && proximityAlerts.length === 0) {
+  console.log('No alerts. Current max: ' + JSON.stringify(state.max));
   process.exit(0);
 }
 
 alerts.sort((a, b) => b.total - a.total);
 const thTime = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
-let msg = '⚠️ Vol2Vol New High — ' + thTime + ' (เวลาไทย)\n\n';
-for (const a of alerts.slice(0, 10)) {
-  msg += '• ' + a.asset + ' Strike ' + a.strike + '\n';
-  msg += '  +' + fmt(a.total) + ' สัญญา/รอบ (Call +' + fmt(a.callDelta) + ', Put +' + fmt(a.putDelta) + ') ทำลายสถิติเดิม ' + fmt(a.prevMax) + '\n';
-}
-if (alerts.length > 10) msg += '…และอีก ' + (alerts.length - 10) + ' รายการ\n';
+let msg = '⚠️ Vol2Vol — ' + thTime + ' (เวลาไทย)\n';
 
-// สรุป Call/Put สะสมมากสุดของ "ทุกสินทรัพย์" — แสดงเสมอแม้สินทรัพย์นั้นไม่เข้าเงื่อนไข new high
+// ---- กลุ่ม 1: ขนาดสัญญาทำลายสถิติ (new high) ----
+if (alerts.length > 0) {
+  msg += '\n🔺 ขนาดสัญญาเข้าใหม่ทำลายสถิติ\n';
+  for (const a of alerts.slice(0, 10)) {
+    msg += '• ' + a.asset + ' Strike ' + a.strike + '\n';
+    msg += '  +' + fmt(a.total) + ' สัญญา/รอบ (Call +' + fmt(a.callDelta) + ', Put +' + fmt(a.putDelta) + ') ทำลายสถิติเดิม ' + fmt(a.prevMax) + '\n';
+  }
+  if (alerts.length > 10) msg += '…และอีก ' + (alerts.length - 10) + ' รายการ\n';
+}
+
+// ---- กลุ่ม 2: ราคาจริงเข้าใกล้ strike ที่มีขนาดสัญญาสะสมมากสุด ----
+if (proximityAlerts.length > 0) {
+  msg += '\n🎯 ราคาเข้าใกล้ strike ที่มีสัญญาสะสมมากสุด\n';
+  for (const p of proximityAlerts) {
+    msg += '• ' + p.asset + ': ราคา ' + p.price + ' ใกล้ ' + p.side + ' Strike ' + p.strike + ' (' + fmt(p.vol) + ' สัญญา, ห่าง ' + (Math.round(p.dist * 100) / 100) + ')\n';
+  }
+}
+
+// ---- สรุป Call/Put สะสมมากสุดของทุกสินทรัพย์ ----
 msg += '\n📊 สรุปขนาดสัญญาสะสมทุกสินทรัพย์\n';
 for (const s of summaries) {
   msg += '• ' + s.asset + '\n';
@@ -143,6 +188,6 @@ fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
   .then((r) => r.json())
   .then((j) => {
     if (!j.ok) { console.error('Telegram error:', JSON.stringify(j)); process.exit(1); }
-    console.log('Sent ' + alerts.length + ' alert(s) to Telegram.');
+    console.log('Sent ' + alerts.length + ' new-high + ' + proximityAlerts.length + ' proximity alert(s).');
   })
   .catch((e) => { console.error(e); process.exit(1); });
