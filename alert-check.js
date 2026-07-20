@@ -3,7 +3,8 @@
 //   - เริ่มต้นใช้ค่ากลาง (median) ของการเปลี่ยนแปลงในรอบนั้นเป็นเส้นฐาน
 //   - ถ้า strike ไหนมีขนาดการเปลี่ยนแปลง "ใหญ่กว่าค่าสูงสุดที่เคยเห็น" ของสินทรัพย์นั้น → แจ้งเตือน และขยับค่าสูงสุดขึ้นเป็นขนาดใหม่
 //   - เล็กกว่าหรือเท่าค่าสูงสุดเดิม → ไม่แจ้ง (ตัดการเตือนซ้ำๆ จากขนาดเดิมๆ)
-//   - ค่าสูงสุดเก็บใน alert-state.json (commit ไว้ใน repo) และรีเซ็ตเองเมื่อขึ้นวันใหม่ (เวลาไทย)
+//   - ค่าสูงสุดเก็บใน alert-state.json (commit ไว้ใน repo) และรีเซ็ตเมื่อขึ้นวันใหม่ (เวลาไทย)
+//     หรือเมื่อตรวจพบ session reset (ผลรวม volume ถูกล้างกลับใกล้ 0 = เริ่มรอบซื้อขายใหม่)
 // รันโดย GitHub Actions — ดู sync.yml
 //
 // ENV ที่ต้องมี:
@@ -58,6 +59,14 @@ for (const asset of ASSETS) {
   const newRows = parseRows(fs.readFileSync(newPath, 'utf8'));
   const oldMap = {};
   oldRows.forEach((r) => { oldMap[r.strike] = r; });
+
+  // ตรวจ session reset: intraday volume สะสมทั้งวัน ถ้าเริ่มรอบใหม่ค่าจะถูกล้างกลับใกล้ 0
+  // เทียบผลรวม volume ใหม่กับรอบก่อน — ถ้าลดฮวบ (< ครึ่งของเดิม) ถือว่าเข้ารอบใหม่ → รีเซ็ตค่าสูงสุดของสินทรัพย์นั้น
+  const oldSum = oldRows.reduce((s, r) => s + r.call + r.put, 0);
+  const newSum = newRows.reduce((s, r) => s + r.call + r.put, 0);
+  if (oldSum > 0 && newSum < oldSum * 0.5) {
+    state.max[asset.key] = 0;
+  }
 
   const deltas = newRows.map((r) => {
     const p = oldMap[r.strike];
