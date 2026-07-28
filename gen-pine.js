@@ -1,4 +1,4 @@
-// สร้างไฟล์ Pine Script (TradingView) จาก top-strikes.csv
+/// สร้างไฟล์ Pine Script (TradingView) จาก top-strikes.csv
 // Pine ไม่สามารถ fetch ข้อมูลภายนอกได้ จึงต้องฝังข้อมูลลงในสคริปต์โดยตรง
 // ไฟล์ผลลัพธ์: pine/gold.pine, pine/oil.pine, pine/es.pine
 // รันโดย GitHub Actions — ดู sync.yml
@@ -55,7 +55,8 @@ for (const [key, meta] of Object.entries(ASSETS)) {
 
   const callSegs = toSegments(list, 'callStrike', 'callVol');
   const putSegs = toSegments(list, 'putStrike', 'putVol');
-  const arr = (v) => '[' + v.join(', ') + ']';
+  // Pine แยกชนิด int/float เคร่งครัด — บังคับให้ strike มีจุดทศนิยมเสมอ ไม่งั้นจะกลายเป็น array<int>
+  const f = (n) => (Number.isInteger(n) ? n.toFixed(1) : String(n));
 
   const pine = `// © Vol2Vol Dashboard — auto-generated ${new Date().toISOString()}
 // ข้อมูล: strike ที่มีขนาดสัญญาสะสมมากสุด (Call/Put) ของ ${meta.label}
@@ -73,12 +74,12 @@ lineWidth = input.int(2, "ความหนาเส้น", minval = 1, maxval
 // ---- ข้อมูลฝังจาก vol2vol (เวลาเป็น unix ms) ----
 var int[]   cStart  = array.from(${callSegs.map((s) => s.start).join(', ')})
 var int[]   cEnd    = array.from(${callSegs.map((s) => s.end).join(', ')})
-var float[] cStrike = array.from(${callSegs.map((s) => s.strike).join(', ')})
+var float[] cStrike = array.from(${callSegs.map((s) => f(s.strike)).join(', ')})
 var int[]   cVol    = array.from(${callSegs.map((s) => s.vol).join(', ')})
 
 var int[]   pStart  = array.from(${putSegs.map((s) => s.start).join(', ')})
 var int[]   pEnd    = array.from(${putSegs.map((s) => s.end).join(', ')})
-var float[] pStrike = array.from(${putSegs.map((s) => s.strike).join(', ')})
+var float[] pStrike = array.from(${putSegs.map((s) => f(s.strike)).join(', ')})
 var int[]   pVol    = array.from(${putSegs.map((s) => s.vol).join(', ')})
 
 drawSet(int[] st, int[] en, float[] sk, int[] vl, color col, string side, bool show) =>
@@ -100,3 +101,4 @@ if barstate.islastconfirmedhistory
   fs.writeFileSync(OUT_DIR + '/' + key + '.pine', pine);
   console.log('Wrote ' + OUT_DIR + '/' + key + '.pine (' + callSegs.length + ' call segs, ' + putSegs.length + ' put segs)');
 }
+
