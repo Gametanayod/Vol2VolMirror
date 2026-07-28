@@ -1,4 +1,4 @@
-// © Vol2Vol Dashboard — auto-generated 2026-07-28T05:42:15.044Z
+// © Vol2Vol Dashboard — auto-generated 2026-07-28T05:48:08.496Z
 // ข้อมูล: strike ที่มีขนาดสัญญาสะสมมากสุด (Call/Put) ของ ES (S&P 500)
 // อัปเดตอัตโนมัติทุกครั้งที่ mirror repo sync ข้อมูล — คัดลอกไฟล์นี้ไปวางใน Pine Editor แล้วกด Save + Add to chart
 //@version=5
@@ -13,14 +13,14 @@ lineWidth = input.int(2, "ความหนาเส้น", minval = 1, maxval
 
 // ---- ข้อมูลฝังจาก vol2vol (เวลาเป็น unix ms) ----
 var int[]   cStart  = array.from(1785208415000)
-var int[]   cEnd    = array.from(1785217025000)
+var int[]   cEnd    = array.from(1785217410000)
 var float[] cStrike = array.from(7500.0)
-var int[]   cVol    = array.from(879)
+var int[]   cVol    = array.from(881)
 
 var int[]   pStart  = array.from(1785208415000, 1785208801000)
-var int[]   pEnd    = array.from(1785208801000, 1785217025000)
+var int[]   pEnd    = array.from(1785208801000, 1785217410000)
 var float[] pStrike = array.from(7400.0, 7350.0)
-var int[]   pVol    = array.from(691, 1245)
+var int[]   pVol    = array.from(691, 1246)
 
 drawSet(int[] st, int[] en, float[] sk, int[] vl, color col, string side, bool show) =>
     if show
