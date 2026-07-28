@@ -3,7 +3,9 @@
   "max": {
     "gold": 4,
     "oil": 11,
-    "es": 40
+    "es": 593
   },
-  "near": {}
+  "near": {
+    "gold_Put": 4050
+  }
 }
