@@ -1,4 +1,4 @@
-// © Vol2Vol Dashboard — auto-generated 2026-07-28T14:20:23.322Z
+// © Vol2Vol Dashboard — auto-generated 2026-07-28T14:26:14.178Z
 // ข้อมูล: strike ที่มีขนาดสัญญาสะสมมากสุด (Call/Put) ของ Oil (CL)
 // อัปเดตอัตโนมัติทุกครั้งที่ mirror repo sync ข้อมูล — คัดลอกไฟล์นี้ไปวางใน Pine Editor แล้วกด Save + Add to chart
 //@version=5
@@ -13,12 +13,12 @@ lineWidth = input.int(2, "ความหนาเส้น", minval = 1, maxval
 
 // ---- ข้อมูลฝังจาก vol2vol (เวลาเป็น unix ms) ----
 var int[]   cStart  = array.from(1785208415000, 1785215517000, 1785218187000, 1785246417000, 1785246810000, 1785247595000)
-var int[]   cEnd    = array.from(1785215517000, 1785218187000, 1785246417000, 1785246810000, 1785247595000, 1785248341000)
+var int[]   cEnd    = array.from(1785215517000, 1785218187000, 1785246417000, 1785246810000, 1785247595000, 1785248741000)
 var float[] cStrike = array.from(82.0, 84.5, 82.0, 83.0, 82.0, 83.0)
 var int[]   cVol    = array.from(167, 184, 230, 246, 249, 259)
 
 var int[]   pStart  = array.from(1785208415000, 1785212578000, 1785240111000)
-var int[]   pEnd    = array.from(1785212578000, 1785240111000, 1785248341000)
+var int[]   pEnd    = array.from(1785212578000, 1785240111000, 1785248741000)
 var float[] pStrike = array.from(76.5, 80.5, 82.0)
 var int[]   pVol    = array.from(34, 173, 229)
 
