@@ -1,0 +1,38 @@
+// © Vol2Vol Dashboard — auto-generated 2026-07-28T03:16:08.221Z
+// ข้อมูล: strike ที่มีขนาดสัญญาสะสมมากสุด (Call/Put) ของ Gold (GC)
+// อัปเดตอัตโนมัติทุกครั้งที่ mirror repo sync ข้อมูล — คัดลอกไฟล์นี้ไปวางใน Pine Editor แล้วกด Save + Add to chart
+//@version=5
+indicator("Vol2Vol Top Strikes — Gold", overlay = true, max_lines_count = 500, max_labels_count = 500)
+
+showCall  = input.bool(true,  "แสดงเส้น Call มากสุด")
+showPut   = input.bool(true,  "แสดงเส้น Put มากสุด")
+showLabel = input.bool(true,  "แสดงป้ายขนาดสัญญา")
+callColor = input.color(color.new(#1c8a52, 0), "สี Call")
+putColor  = input.color(color.new(#c0392b, 0), "สี Put")
+lineWidth = input.int(2, "ความหนาเส้น", minval = 1, maxval = 5)
+
+// ---- ข้อมูลฝังจาก vol2vol (เวลาเป็น unix ms) ----
+var int[]   cStart  = array.from(1785208415000)
+var int[]   cEnd    = array.from(1785208415000)
+var float[] cStrike = array.from(4100)
+var int[]   cVol    = array.from(90)
+
+var int[]   pStart  = array.from(1785208415000)
+var int[]   pEnd    = array.from(1785208415000)
+var float[] pStrike = array.from(4050)
+var int[]   pVol    = array.from(46)
+
+drawSet(int[] st, int[] en, float[] sk, int[] vl, color col, string side, bool show) =>
+    if show
+        for i = 0 to array.size(st) - 1
+            line.new(array.get(st, i), array.get(sk, i), array.get(en, i), array.get(sk, i),
+                     xloc = xloc.bar_time, extend = extend.none, color = col, width = lineWidth)
+            if showLabel
+                label.new(array.get(en, i), array.get(sk, i),
+                          side + " " + str.tostring(array.get(vl, i)),
+                          xloc = xloc.bar_time, style = label.style_label_left,
+                          color = color.new(col, 85), textcolor = col, size = size.tiny)
+
+if barstate.islastconfirmedhistory
+    drawSet(cStart, cEnd, cStrike, cVol, callColor, "C", showCall)
+    drawSet(pStart, pEnd, pStrike, pVol, putColor,  "P", showPut)
