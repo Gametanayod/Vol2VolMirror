@@ -63,9 +63,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          ALERT_SENSITIVITY: "4"    # ความไว: ต่ำ = เตือนบ่อย, สูง = เตือนเฉพาะผิดปกติมาก
-          ALERT_MIN_DELTA: "20"     # ขั้นต่ำสัญญาที่เพิ่มต่อ 5 นาที
-        run: node alert-check.js _old .
+        run: node alert-check.js _old .   # เกณฑ์ new-high: แจ้งเฉพาะเมื่อขนาดใหญ่กว่าค่าสูงสุดของวัน (เริ่มต้นที่ median) — state เก็บใน alert-state.json
 
       - name: Get source commit time (so mirror timestamps match the data source)
         id: srctime
@@ -79,6 +77,14 @@ jobs:
           echo "date=$SRC_DATE" >> "$GITHUB_OUTPUT"
           echo "Source commit time: $SRC_DATE"
 
+      - name: Log top strikes & regenerate TradingView Pine indicators
+        if: steps.apply.outputs.changed == '1'
+        env:
+          SRC_DATE: ${{ steps.srctime.outputs.date }}
+        run: |
+          node log-top-strikes.js . "${SRC_DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
+          node gen-pine.js
+
       - name: Commit new data
         if: steps.apply.outputs.changed == '1'
         env:
@@ -88,6 +94,8 @@ jobs:
           git config user.name "vol2vol-mirror-bot"
           git config user.email "actions@github.com"
           git add ./*.txt
+          git add alert-state.json 2>/dev/null || true
+          git add top-strikes.csv pine 2>/dev/null || true
           # ใช้เวลา commit ของต้นทางเป็นเวลา commit ของ mirror — ป้ายเวลาบน dashboard จะตรงกับ data source
           if [ -n "$SRC_DATE" ]; then
             export GIT_AUTHOR_DATE="$SRC_DATE"
@@ -98,4 +106,5 @@ jobs:
           fi
           git commit -m "Data Sync: $MSG_TIME"
           git push
+
 
