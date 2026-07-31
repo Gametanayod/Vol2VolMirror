@@ -59,7 +59,6 @@ function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
 const state = loadState();
 const alerts = [];
 const proximityAlerts = []; // เตือนเมื่อราคาจริงเข้าใกล้ strike ที่มีขนาดสัญญาสะสมมากสุด
-const summaries = []; // top Call/Put สะสมของทุกสินทรัพย์ — แนบท้ายข้อความเสมอเมื่อมี alert
 for (const asset of ASSETS) {
   const oldPath = OLD_DIR + '/' + asset.file;
   const newPath = NEW_DIR + '/' + asset.file;
@@ -93,8 +92,6 @@ for (const asset of ASSETS) {
     if (!topCall || r.call > topCall.call) topCall = r;
     if (!topPut || r.put > topPut.put) topPut = r;
   });
-  summaries.push({ asset: asset.label, topCall, topPut });
-
   // ---- เงื่อนไข: ราคาจริงเข้าใกล้ strike ที่มีขนาดสัญญาสะสมมากสุด ----
   // เตือนครั้งเดียวต่อ strike (เก็บใน state.near) จนกว่าราคาจะออกจากโซนแล้วค่อยกลับเข้าใหม่
   if (price != null) {
@@ -163,14 +160,6 @@ if (proximityAlerts.length > 0) {
   for (const p of proximityAlerts) {
     msg += '• ' + p.asset + ': ราคา ' + p.price + ' ใกล้ ' + p.side + ' Strike ' + p.strike + ' (' + fmt(p.vol) + ' สัญญา, ห่าง ' + (Math.round(p.dist * 100) / 100) + ')\n';
   }
-}
-
-// ---- สรุป Call/Put สะสมมากสุดของทุกสินทรัพย์ ----
-msg += '\n📊 สรุปขนาดสัญญาสะสมทุกสินทรัพย์\n';
-for (const s of summaries) {
-  msg += '• ' + s.asset + '\n';
-  if (s.topCall) msg += '  Call มากสุด: Strike ' + s.topCall.strike + ' (' + fmt(s.topCall.call) + ' สัญญา)\n';
-  if (s.topPut) msg += '  Put มากสุด: Strike ' + s.topPut.strike + ' (' + fmt(s.topPut.put) + ' สัญญา)\n';
 }
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
