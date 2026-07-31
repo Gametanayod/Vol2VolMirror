@@ -77,14 +77,6 @@ jobs:
           echo "date=$SRC_DATE" >> "$GITHUB_OUTPUT"
           echo "Source commit time: $SRC_DATE"
 
-      - name: Log top strikes & regenerate TradingView Pine indicators
-        if: steps.apply.outputs.changed == '1'
-        env:
-          SRC_DATE: ${{ steps.srctime.outputs.date }}
-        run: |
-          node log-top-strikes.js . "${SRC_DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
-          node gen-pine.js
-
       - name: Commit new data
         if: steps.apply.outputs.changed == '1'
         env:
@@ -95,7 +87,6 @@ jobs:
           git config user.email "actions@github.com"
           git add ./*.txt
           git add alert-state.json 2>/dev/null || true
-          git add top-strikes.csv pine 2>/dev/null || true
           # ใช้เวลา commit ของต้นทางเป็นเวลา commit ของ mirror — ป้ายเวลาบน dashboard จะตรงกับ data source
           if [ -n "$SRC_DATE" ]; then
             export GIT_AUTHOR_DATE="$SRC_DATE"
