@@ -8,6 +8,7 @@
   "near": {
     "gold_Put": 4360,
     "gold_Call": 4360,
-    "oil_Put": 78
+    "oil_Put": 78,
+    "oil_Call": 78
   }
 }
