@@ -7,6 +7,6 @@
   },
   "near": {
     "oil_Put": 83,
-    "oil_Call": 83.5
+    "oil_Call": null
   }
 }
