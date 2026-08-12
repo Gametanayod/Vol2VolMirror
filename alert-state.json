@@ -3,10 +3,10 @@
   "max": {
     "gold": 43,
     "oil": 294,
-    "es": 577
+    "es": 611
   },
   "near": {
     "gold_Call": null,
-    "oil_Put": null
+    "oil_Put": 83
   }
 }
