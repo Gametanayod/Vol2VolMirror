@@ -1,15 +1,16 @@
 {
   "day": "2026-08-14",
   "max": {
-    "gold": 144,
+    "gold": 154,
     "es": 7191,
     "oil": 213
   },
   "near": {
-    "oil_Put": 81,
+    "oil_Put": null,
     "gold_Put": null,
     "es_Call": null,
     "gold_Call": null,
-    "oil_Call": null
+    "oil_Call": 82,
+    "es_Put": 7800
   }
 }
