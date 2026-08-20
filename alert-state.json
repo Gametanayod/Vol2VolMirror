@@ -1,11 +1,12 @@
 {
   "day": "2026-08-20",
   "max": {
-    "gold": 98,
-    "oil": 5,
+    "gold": 214,
+    "oil": 118,
     "es": 0
   },
   "near": {
-    "es_Call": null
+    "es_Call": null,
+    "oil_Call": 85
   }
 }
