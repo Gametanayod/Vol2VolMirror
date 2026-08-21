@@ -9,7 +9,7 @@
     "oil_Put": 86.5,
     "gold_Put": 4585,
     "es_Put": null,
-    "gold_Call": null,
+    "gold_Call": 4600,
     "oil_Call": null,
     "es_Call": null
   }
