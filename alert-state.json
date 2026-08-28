@@ -7,7 +7,7 @@
   },
   "near": {
     "oil_Put": 83,
-    "oil_Call": null,
+    "oil_Call": 83,
     "gold_Call": 4500
   }
 }
