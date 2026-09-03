@@ -8,6 +8,7 @@
   "near": {
     "oil_Put": 91.5,
     "es_Call": 7750,
-    "es_Put": 7750
+    "es_Put": 7750,
+    "oil_Call": 92.5
   }
 }
