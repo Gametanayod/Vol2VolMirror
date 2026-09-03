@@ -6,8 +6,8 @@
     "es": 2690
   },
   "near": {
-    "gold_Call": null,
-    "oil_Call": 92,
+    "gold_Call": 4515,
+    "oil_Call": null,
     "oil_Put": null,
     "es_Call": 7750
   }
