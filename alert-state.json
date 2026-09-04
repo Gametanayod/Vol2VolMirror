@@ -6,7 +6,7 @@
     "es": 1647
   },
   "near": {
-    "oil_Put": 90,
+    "oil_Put": null,
     "es_Call": 7750,
     "es_Put": 7750,
     "oil_Call": null,
